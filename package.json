@@ -17,7 +17,7 @@
   "bugs": {
     "url": "https://github.com/Idle-Lads/idle/issues"
   },
-  "homepage": "https://github.com/Idle-Lads/idle#readme",
+  "homepage": "https://idle-lads.github.io/idle/",
   "devDependencies": {
     "eslint": "^8.16.0",
     "http-server": "^14.1.0"
