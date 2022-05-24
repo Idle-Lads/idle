@@ -1,0 +1,25 @@
+{
+  "name": "idle",
+  "version": "0.0.1",
+  "description": "Idle game",
+  "main": "app.js",
+  "scripts": {
+    "predev": "test -f /opt/homebrew/opt/nvm/nvm.sh && source /opt/homebrew/opt/nvm/nvm.sh || echo 'not found' exit 0; nvm use --lts || exit 0",
+    "dev": "npx http-server -c-1",
+    "lint": "npx eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Idle-Lads/idle.git"
+  },
+  "author": "jeengland",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Idle-Lads/idle/issues"
+  },
+  "homepage": "https://github.com/Idle-Lads/idle#readme",
+  "devDependencies": {
+    "eslint": "^8.16.0",
+    "http-server": "^14.1.0"
+  }
+}
