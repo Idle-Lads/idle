@@ -9,3 +9,5 @@ In order to run dev, run `npm run dev`.
 * If this causes an error, try removing "predev" from the package.json scripts.
 
 In order to run linter, run `npm run lint`.
+
+In order to deploy, run `npm run deploy`.

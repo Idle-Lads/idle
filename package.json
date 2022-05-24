@@ -2,11 +2,13 @@
   "name": "idle",
   "version": "0.0.1",
   "description": "Idle game",
-  "main": "app.js",
   "scripts": {
     "predev": "test -f /opt/homebrew/opt/nvm/nvm.sh && source /opt/homebrew/opt/nvm/nvm.sh || echo 'not found' exit 0; nvm use --lts || exit 0",
-    "dev": "npx http-server -c-1",
-    "lint": "npx eslint ."
+    "dev": "npx parcel index.html",
+    "lint": "npx eslint .",
+    "build": "parcel build index.html --public-url ./",
+    "predeploy": "rm -rf dist && npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "repository": {
     "type": "git",
@@ -17,9 +19,11 @@
   "bugs": {
     "url": "https://github.com/Idle-Lads/idle/issues"
   },
-  "homepage": "https://idle-lads.github.io/idle/",
+  "homepage": "http://idle-lads.github.io/idle/",
   "devDependencies": {
     "eslint": "^8.16.0",
-    "http-server": "^14.1.0"
+    "gh-pages": "^4.0.0",
+    "http-server": "^14.1.0",
+    "parcel": "^2.5.0"
   }
 }
