@@ -528,6 +528,7 @@ function hmrAcceptRun(bundle, id) {
 },{}],"igcvL":[function(require,module,exports) {
 var _displayJs = require("/utils/display.js");
 var _eventsJs = require("/game/events.js");
+// #TODO make the store automatically update all necessary "draws" when store is updated
 const store = {
     money: 0,
     interval: 1000,
@@ -566,11 +567,15 @@ function startButton(store) {
             _displayJs.draw('.money', store.money);
         });
     });
+    document.querySelector('.startCounter').disabled = true;
+    document.querySelector('.stopCounter').disabled = false;
 }
 function stopButton(store) {
     document.querySelector('.stopCounter').addEventListener('click', function() {
         store.exit = true;
     });
+    document.querySelector('.startCounter').disabled = false;
+    document.querySelector('.stopCounter').disabled = true;
 }
 function upgradeButton(store) {
     document.querySelector('.buyUpgrade').addEventListener('click', function() {
