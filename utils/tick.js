@@ -13,8 +13,9 @@ function onlineTicks(intervalStore, cb) {
 		return;
 	}
 
-	cb();
 	setTimeout(() => {
+		console.log(interval);
+		cb();
 		onlineTicks(intervalStore, cb);
 	}, interval);
 }

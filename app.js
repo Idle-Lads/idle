@@ -1,33 +1,25 @@
-import { onlineTicks } from '/utils/tick.js';
+import { draw } from '/utils/display.js';
+import { startButton, stopButton, upgradeButton } from '/game/events.js';
 
+// #TODO make the store automatically update all necessary "draws" when store is updated
 const store = {
 	money: 0,
 	interval: 1000,
 	exit: false,
+	upgradeCost: 1
 };
 
 function bindEvents() {
-	document.querySelector('.startCounter').addEventListener('click', function () {
-		store.exit = false;
-		onlineTicks(store, function() { 
-			store.money += 1;
-			draw();
-			store.interval *= 1.5;
-		});
-	});
-	document.querySelector('.stopCounter').addEventListener('click', function () {
-		store.exit = true;
-	});
-}
-
-function draw() {
-	document.querySelector('.money').innerHTML = store.money;
+	startButton(store);
+	stopButton(store);
+	upgradeButton(store);
 }
 
 function init() {
 	console.log('Application started');
 	bindEvents();
-	draw();
+	draw('.money', store.money);
+	draw('.upgradeCost', store.upgradeCost);
 }
 
 init();
