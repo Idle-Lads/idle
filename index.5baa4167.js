@@ -545,6 +545,8 @@ function init() {
     bindEvents();
     _displayJs.draw('.money', store.money);
     _displayJs.draw('.upgradeCost', store.upgradeCost);
+    document.querySelector('.startCounter').disabled = false;
+    document.querySelector('.stopCounter').disabled = true;
 }
 init();
 
@@ -566,16 +568,16 @@ function startButton(store) {
             store.money += 1;
             _displayJs.draw('.money', store.money);
         });
+        document.querySelector('.startCounter').disabled = true;
+        document.querySelector('.stopCounter').disabled = false;
     });
-    document.querySelector('.startCounter').disabled = true;
-    document.querySelector('.stopCounter').disabled = false;
 }
 function stopButton(store) {
     document.querySelector('.stopCounter').addEventListener('click', function() {
         store.exit = true;
+        document.querySelector('.startCounter').disabled = false;
+        document.querySelector('.stopCounter').disabled = true;
     });
-    document.querySelector('.startCounter').disabled = false;
-    document.querySelector('.stopCounter').disabled = true;
 }
 function upgradeButton(store) {
     document.querySelector('.buyUpgrade').addEventListener('click', function() {
