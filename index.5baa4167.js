@@ -581,7 +581,10 @@ function stopButton(store) {
 }
 function upgradeButton(store) {
     document.querySelector('.buyUpgrade').addEventListener('click', function() {
-        if (store.upgradeCost > store.money) _displayJs.draw('.warningText', 'Not enough money!');
+        if (store.upgradeCost > store.money) {
+            _displayJs.draw('.warningText', 'Not enough money!');
+            return;
+        }
         _displayJs.draw('.warningText', '');
         store.money -= store.upgradeCost;
         store.interval -= 50;
