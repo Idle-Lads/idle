@@ -1,37 +1,51 @@
 import { draw } from '/utils/display.js';
 import { onlineTicks } from '/utils/tick.js';
+import { getStoreValue, updateStoreValue } from '/utils/store.js';
 
-function startButton(store) {
+function startButton() {
 	document.querySelector('.startCounter').addEventListener('click', function () {
-		store.exit = false;
-		onlineTicks(store, function() { 
-			store.money += 1;
-			draw('.money', store.money);
+		updateStoreValue('exit', false);
+		onlineTicks(function() { 
+			var money = getStoreValue('money');
+			updateStoreValue('money', money + 1);
 		});
+
+		document.querySelector('.startCounter').disabled = true;
+		document.querySelector('.stopCounter').disabled = false;
 	});
+
+	return;
 }
 
-function stopButton(store) {
+function stopButton() {
 	document.querySelector('.stopCounter').addEventListener('click', function () {
-		store.exit = true;
+		updateStoreValue('exit', true);
+		document.querySelector('.startCounter').disabled = false;
+		document.querySelector('.stopCounter').disabled = true;
 	});
+
+	return;
 }
 
-function upgradeButton(store) {
+function upgradeButton() {
 	document.querySelector('.buyUpgrade').addEventListener('click', function () {
-		if (store.upgradeCost > store.money) {
+		var upgradeCost = getStoreValue('upgradeCost'),
+			money = getStoreValue('money'),
+			interval = getStoreValue('interval');
+
+		if (upgradeCost > money) {
 			draw('.warningText', 'Not enough money!');
+			return;
 		}
 
 		draw('.warningText', '');
 
-		store.money -= store.upgradeCost;
-		store.interval -= 50;
-		store.upgradeCost *= 2;
-
-		draw('.upgradeCost', store.upgradeCost);
-		draw('.money', store.money);
+		updateStoreValue('money', money - upgradeCost);
+		updateStoreValue('interval', interval - 50);
+		updateStoreValue('upgradeCost', upgradeCost * 2);
 	});
+
+	return;
 }
 
 export {

@@ -1,23 +1,27 @@
+import { getStoreValue } from '/utils/store.js';
+
 var MINIMUM_INTERVAL = 300;
 
-function onlineTicks(intervalStore, cb) {
-	var interval = intervalStore.interval;
+function onlineTicks(cb) {
+	var interval = getStoreValue('interval'),
+		exit = getStoreValue('exit');
 
 	if (interval < MINIMUM_INTERVAL) {
 		console.warn('Attempted to use interval lower than minimum interval, setting interval to minimum');
 		interval = MINIMUM_INTERVAL;
 	}
 
-	if (intervalStore.exit === true) {
+	if (exit === true) {
 		console.log('Ticks stopped');
 		return;
 	}
 
 	setTimeout(() => {
-		console.log(interval);
 		cb();
-		onlineTicks(intervalStore, cb);
+		onlineTicks(cb);
 	}, interval);
+
+	return;
 }
 
 // #TODO: Implement offline tick calculator
