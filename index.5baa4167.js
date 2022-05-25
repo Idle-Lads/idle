@@ -528,79 +528,145 @@ function hmrAcceptRun(bundle, id) {
 },{}],"igcvL":[function(require,module,exports) {
 var _displayJs = require("/utils/display.js");
 var _eventsJs = require("/game/events.js");
-// #TODO make the store automatically update all necessary "draws" when store is updated
-const store = {
-    money: 0,
-    interval: 1000,
-    exit: false,
-    upgradeCost: 1
-};
+var _storeJs = require("/utils/store.js");
+var _devtoolsJs = require("/utils/devtools.js");
 function bindEvents() {
-    _eventsJs.startButton(store);
-    _eventsJs.stopButton(store);
-    _eventsJs.upgradeButton(store);
+    _eventsJs.startButton();
+    _eventsJs.stopButton();
+    _eventsJs.upgradeButton();
+    return;
+}
+function initializeStore() {
+    _storeJs.initStoreValue('money', 0, [
+        ()=>_displayJs.drawFromStore('.money', 'money')
+    ]);
+    _storeJs.initStoreValue('upgradeCost', 1, [
+        ()=>_displayJs.drawFromStore('.upgradeCost', 'upgradeCost')
+    ]);
+    _storeJs.initStoreValue('interval', 1000);
+    _storeJs.initStoreValue('exit', false);
+    return;
+}
+function initializeDraw() {
+    _displayJs.drawFromStore('.money', 'money');
+    _displayJs.drawFromStore('.upgradeCost', 'upgradeCost');
+    return;
 }
 function init() {
     console.log('Application started');
     bindEvents();
-    _displayJs.draw('.money', store.money);
-    _displayJs.draw('.upgradeCost', store.upgradeCost);
+    initializeStore();
+    initializeDraw();
     document.querySelector('.startCounter').disabled = false;
     document.querySelector('.stopCounter').disabled = true;
+    _devtoolsJs.activateDevFunctions();
+    return;
 }
 init();
 
-},{"/game/events.js":"678JF","/utils/display.js":"fiw1F"}],"678JF":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "startButton", ()=>startButton
-);
-parcelHelpers.export(exports, "stopButton", ()=>stopButton
-);
-parcelHelpers.export(exports, "upgradeButton", ()=>upgradeButton
-);
-var _displayJs = require("/utils/display.js");
-var _tickJs = require("/utils/tick.js");
-function startButton(store) {
-    document.querySelector('.startCounter').addEventListener('click', function() {
-        store.exit = false;
-        _tickJs.onlineTicks(store, function() {
-            store.money += 1;
-            _displayJs.draw('.money', store.money);
-        });
-        document.querySelector('.startCounter').disabled = true;
-        document.querySelector('.stopCounter').disabled = false;
-    });
-}
-function stopButton(store) {
-    document.querySelector('.stopCounter').addEventListener('click', function() {
-        store.exit = true;
-        document.querySelector('.startCounter').disabled = false;
-        document.querySelector('.stopCounter').disabled = true;
-    });
-}
-function upgradeButton(store) {
-    document.querySelector('.buyUpgrade').addEventListener('click', function() {
-        if (store.upgradeCost > store.money) {
-            _displayJs.draw('.warningText', 'Not enough money!');
-            return;
-        }
-        _displayJs.draw('.warningText', '');
-        store.money -= store.upgradeCost;
-        store.interval -= 50;
-        store.upgradeCost *= 2;
-        _displayJs.draw('.upgradeCost', store.upgradeCost);
-        _displayJs.draw('.money', store.money);
-    });
-}
-
-},{"/utils/display.js":"fiw1F","/utils/tick.js":"fqJbJ","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"fiw1F":[function(require,module,exports) {
+},{"/utils/display.js":"fiw1F","/game/events.js":"678JF","/utils/store.js":"hkUX0","/utils/devtools.js":"7Pj8I"}],"fiw1F":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "draw", ()=>draw
 );
+parcelHelpers.export(exports, "drawFromStore", ()=>drawFromStore
+);
+var _storeJs = require("/utils/store.js");
 function draw(className, value) {
     document.querySelector(className).innerHTML = value;
+    return;
+}
+function drawFromStore(className, storeKey) {
+    let value = _storeJs.getStoreValue(storeKey);
+    if (value === null) {
+        console.error('Failed to retrieve value from store using key', storeKey);
+        return;
+    }
+    draw(className, value);
+    return;
+}
+
+},{"/utils/store.js":"hkUX0","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"hkUX0":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "initStoreValue", ()=>initStoreValue
+);
+parcelHelpers.export(exports, "getStoreValue", ()=>getStoreValue
+);
+parcelHelpers.export(exports, "updateStoreValue", ()=>updateStoreValue
+);
+parcelHelpers.export(exports, "updateStoreSubs", ()=>updateStoreSubs
+);
+parcelHelpers.export(exports, "getStoreString", ()=>getStoreString
+);
+parcelHelpers.export(exports, "updateWholeStoreSubs", ()=>updateWholeStoreSubs
+);
+const store = {
+    wholeStoreSubs: []
+};
+function initStoreValue(key, value, subs = []) {
+    if (store[key]) {
+        console.error('Store already has entry by key', key);
+        return;
+    }
+    store[key] = {
+        value: value,
+        subs: [
+            ...subs
+        ]
+    };
+    return;
+}
+function getStoreValue(key) {
+    if (!store[key]) {
+        console.error('No entry in store by key', key);
+        return null;
+    }
+    return store[key].value;
+}
+function executeSubs(key) {
+    if (!store[key]) {
+        console.error('No entry in store by key', key);
+        return;
+    }
+    const subs = store[key].subs;
+    if (subs.length == 0) return;
+    for(let sub in subs)subs[sub]();
+    return;
+}
+function updateStoreValue(key, value) {
+    if (!store[key]) {
+        console.error('No entry in store by key', key);
+        return;
+    }
+    store[key].value = value;
+    executeSubs(key);
+    executeWholeStoreSubs();
+    return;
+}
+function updateStoreSubs(key, subs) {
+    if (!store[key]) {
+        console.error('No entry in store by key', key);
+        return;
+    }
+    store[key].subs.push(...subs);
+    return;
+}
+function replacer(key, value) {
+    if (typeof value === 'function') return value.toString();
+    return value;
+}
+function getStoreString(seperator = '') {
+    return JSON.stringify(store, replacer, seperator);
+}
+function updateWholeStoreSubs(subs) {
+    store.wholeStoreSubs.push(...subs);
+}
+function executeWholeStoreSubs() {
+    const subs = store.wholeStoreSubs;
+    if (subs.length == 0) return;
+    for(let sub in subs)subs[sub]();
+    return;
 }
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
@@ -633,7 +699,54 @@ exports.export = function(dest, destName, get) {
     });
 };
 
-},{}],"fqJbJ":[function(require,module,exports) {
+},{}],"678JF":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "startButton", ()=>startButton
+);
+parcelHelpers.export(exports, "stopButton", ()=>stopButton
+);
+parcelHelpers.export(exports, "upgradeButton", ()=>upgradeButton
+);
+var _displayJs = require("/utils/display.js");
+var _tickJs = require("/utils/tick.js");
+var _storeJs = require("/utils/store.js");
+function startButton() {
+    document.querySelector('.startCounter').addEventListener('click', function() {
+        _storeJs.updateStoreValue('exit', false);
+        _tickJs.onlineTicks(function() {
+            var money = _storeJs.getStoreValue('money');
+            _storeJs.updateStoreValue('money', money + 1);
+        });
+        document.querySelector('.startCounter').disabled = true;
+        document.querySelector('.stopCounter').disabled = false;
+    });
+    return;
+}
+function stopButton() {
+    document.querySelector('.stopCounter').addEventListener('click', function() {
+        _storeJs.updateStoreValue('exit', true);
+        document.querySelector('.startCounter').disabled = false;
+        document.querySelector('.stopCounter').disabled = true;
+    });
+    return;
+}
+function upgradeButton() {
+    document.querySelector('.buyUpgrade').addEventListener('click', function() {
+        var upgradeCost = _storeJs.getStoreValue('upgradeCost'), money = _storeJs.getStoreValue('money'), interval = _storeJs.getStoreValue('interval');
+        if (upgradeCost > money) {
+            _displayJs.draw('.warningText', 'Not enough money!');
+            return;
+        }
+        _displayJs.draw('.warningText', '');
+        _storeJs.updateStoreValue('money', money - upgradeCost);
+        _storeJs.updateStoreValue('interval', interval - 50);
+        _storeJs.updateStoreValue('upgradeCost', upgradeCost * 2);
+    });
+    return;
+}
+
+},{"/utils/display.js":"fiw1F","/utils/tick.js":"fqJbJ","/utils/store.js":"hkUX0","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"fqJbJ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 // #TODO: Implement offline tick calculator
@@ -642,24 +755,49 @@ parcelHelpers.defineInteropFlag(exports);
 // }
 parcelHelpers.export(exports, "onlineTicks", ()=>onlineTicks
 );
+var _storeJs = require("/utils/store.js");
 var MINIMUM_INTERVAL = 300;
-function onlineTicks(intervalStore, cb) {
-    var interval = intervalStore.interval;
+function onlineTicks(cb) {
+    var interval = _storeJs.getStoreValue('interval'), exit = _storeJs.getStoreValue('exit');
     if (interval < MINIMUM_INTERVAL) {
         console.warn('Attempted to use interval lower than minimum interval, setting interval to minimum');
         interval = MINIMUM_INTERVAL;
     }
-    if (intervalStore.exit === true) {
+    if (exit === true) {
         console.log('Ticks stopped');
         return;
     }
     setTimeout(()=>{
-        console.log(interval);
         cb();
-        onlineTicks(intervalStore, cb);
+        onlineTicks(cb);
     }, interval);
+    return;
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["dbTJo","igcvL"], "igcvL", "parcelRequired0d4")
+},{"/utils/store.js":"hkUX0","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7Pj8I":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "activateDevFunctions", ()=>activateDevFunctions
+);
+var _storeJs = require("/utils/store.js");
+var _displayJs = require("/utils/display.js");
+function isInDev() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('devmode') !== null) return true;
+    return false;
+}
+function activateDevFunctions() {
+    if (!isInDev()) return;
+    const devTools = document.createElement('pre');
+    devTools.classList.add('devTools');
+    document.querySelector('.game').append(devTools);
+    _storeJs.updateWholeStoreSubs([
+        ()=>_displayJs.draw('.devTools', _storeJs.getStoreString('\t'))
+    ]);
+    window.getStoreString = _storeJs.getStoreString;
+    return;
+}
+
+},{"/utils/store.js":"hkUX0","/utils/display.js":"fiw1F","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["dbTJo","igcvL"], "igcvL", "parcelRequired0d4")
 
 //# sourceMappingURL=index.5baa4167.js.map
