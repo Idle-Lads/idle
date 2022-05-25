@@ -537,20 +537,34 @@ function bindEvents() {
     return;
 }
 function initializeStore() {
-    if (_storeJs.getStoreValue('loaded')) return;
-    _storeJs.initStoreValue('money', 0, [
-        ()=>_displayJs.drawFromStore('.money', 'money')
+    _storeJs.initStoreValue('money', {
+        value: 0
+    }, [
+        {
+            triggers: [
+                'value'
+            ],
+            func: ()=>_displayJs.drawFromStore('.money', 'money', 'value')
+        }
     ]);
-    _storeJs.initStoreValue('upgradeCost', 1, [
-        ()=>_displayJs.drawFromStore('.upgradeCost', 'upgradeCost')
+    _storeJs.initStoreValue('upgradeCost', {
+        value: 1
+    }, [
+        {
+            triggers: [
+                'value'
+            ],
+            func: ()=>_displayJs.drawFromStore('.upgradeCost', 'upgradeCost', 'value')
+        }
     ]);
-    _storeJs.initStoreValue('interval', 1000);
-    _storeJs.initStoreValue('exit', false);
+    _storeJs.initStoreValue('exit', {
+        value: false
+    });
     return;
 }
 function initializeDraw() {
-    _displayJs.drawFromStore('.money', 'money');
-    _displayJs.drawFromStore('.upgradeCost', 'upgradeCost');
+    _displayJs.drawFromStore('.money', 'money', 'value');
+    _displayJs.drawFromStore('.upgradeCost', 'upgradeCost', 'value');
     return;
 }
 function init() {
@@ -575,19 +589,36 @@ parcelHelpers.export(exports, "draw", ()=>draw
 );
 parcelHelpers.export(exports, "drawFromStore", ()=>drawFromStore
 );
+parcelHelpers.export(exports, "createAccumulatorInterface", ()=>createAccumulatorInterface
+);
 var _storeJs = require("/utils/store.js");
 function draw(className, value) {
     document.querySelector(className).innerHTML = value;
     return;
 }
-function drawFromStore(className, storeKey) {
-    let value = _storeJs.getStoreValue(storeKey);
+function drawFromStore(className, storeKey, prop) {
+    let value = _storeJs.getStoreValue(storeKey, prop);
     if (value === null) {
         console.error('Failed to retrieve value from store using key', storeKey);
         return;
     }
     draw(className, value);
     return;
+}
+function createAccumulatorInterface(name) {
+    const accumulator = document.createElement('div');
+    accumulator.classList.add(name);
+    const title = document.createElement('h3'), output = document.createElement('p'), upgradeInterval = document.createElement('button'), upgradeRate = document.createElement('button');
+    var titleText = name.split('_').map((word)=>word[0].toUpperCase() + word.substring(1)
+    ).join(' ');
+    title.innerHTML = titleText;
+    output.classList.add(name + '_output');
+    upgradeInterval.classList.add(name + '_interval');
+    upgradeInterval.innerHTML = `Upgrade Interval: $<span class="${name}_upgrade_interval_cost></span>`;
+    upgradeRate.classList.add(name + '_rate');
+    upgradeRate.innerHTML = `Upgrade Rate: $<span class="${name}_upgrade_rate_cost></span>`;
+    accumulator.append(title, output, upgradeInterval, upgradeRate);
+    document.querySelector('.accumulators').append(accumulator);
 }
 
 },{"/utils/store.js":"hkUX0","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"hkUX0":[function(require,module,exports) {
@@ -608,59 +639,55 @@ parcelHelpers.export(exports, "updateWholeStoreSubs", ()=>updateWholeStoreSubs
 parcelHelpers.export(exports, "saveToLocalStorage", ()=>saveToLocalStorage
 );
 const store = {
-    wholeStoreSubs: [],
-    loaded: {
-        value: false
-    }
+    wholeStoreSubs: []
 };
-function getStoreValues() {
+function getAllStoreData() {
     const storeValues = {};
-    for(let key in store)if (store[key].value) storeValues[key] = store[key].value;
+    for(let key in store)if (store[key].data) storeValues[key] = store[key].data;
     return storeValues;
 }
 function saveToLocalStorage() {
-    const storeValues = JSON.stringify(getStoreValues());
+    const storeValues = JSON.stringify(getAllStoreData());
     window.localStorage.setItem('idlestore', storeValues);
 }
-function initStoreValue(key, value, subs = []) {
+function initStoreValue(key, data, subs = []) {
     if (store[key]) {
         console.error('Store already has entry by key', key);
         return;
     }
     const storeValues = JSON.parse(window.localStorage.getItem('idlestore'));
-    if (storeValues && storeValues[key]) value = storeValues[key];
+    if (storeValues && storeValues[key]) data = storeValues[key];
     store[key] = {
-        value: value,
+        data: data,
         subs: [
             ...subs
         ]
     };
-    return;
 }
-function getStoreValue(key) {
+function getStoreValue(key, prop) {
     if (!store[key]) {
         console.error('No entry in store by key', key);
         return null;
     }
-    return store[key].value;
+    return store[key].data[prop];
 }
-function executeSubs(key) {
+function executeSubs(key, prop) {
     if (!store[key]) {
         console.error('No entry in store by key', key);
         return;
     }
     const subs = store[key].subs;
     if (subs.length == 0) return;
-    for(let sub in subs)subs[sub]();
+    for(let sub in subs)if (subs[sub].triggers.indexOf(prop) > -1) subs[sub].func();
     return;
 }
-function updateStoreValue(key, value) {
+function updateStoreValue(key, prop, value) {
     if (!store[key]) {
         console.error('No entry in store by key', key);
         return;
     }
-    store[key].value = value;
-    executeSubs(key);
+    store[key].data[prop] = value;
+    executeSubs(key, prop);
     executeWholeStoreSubs();
     return;
 }
@@ -731,21 +758,57 @@ parcelHelpers.export(exports, "upgradeButton", ()=>upgradeButton
 var _displayJs = require("/utils/display.js");
 var _tickJs = require("/utils/tick.js");
 var _storeJs = require("/utils/store.js");
+var _globalsJs = require("/utils/globals.js");
 function startButton() {
     document.querySelector('.startCounter').addEventListener('click', function() {
         _storeJs.updateStoreValue('exit', false);
-        _tickJs.onlineTicks(function() {
-            var money = _storeJs.getStoreValue('money');
-            _storeJs.updateStoreValue('money', money + 1);
-        });
+        createAccumulator('sample', 2000, 2);
+        createAccumulator('sample_2', 10000, 10);
+        createAccumulator('sample_3', 500, 1);
         document.querySelector('.startCounter').disabled = true;
         document.querySelector('.stopCounter').disabled = false;
     });
     return;
 }
+function calculateOutput(name, resource = '$') {
+    const interval = _storeJs.getStoreValue(name, 'interval'), rate = _storeJs.getStoreValue(name, 'rate');
+    let intervalString, rateString;
+    if (interval === _globalsJs.MINIMUM_INTERVAL) intervalString = 'tick';
+    else intervalString = interval / 1000.0 + ' second' + (interval / 1000.0 === 1 ? '' : 's');
+    if (resource === '$') rateString = '$' + rate;
+    else rateString = rate + ' ' + resource;
+    return `${rateString} / ${intervalString}`;
+}
+function createAccumulator(name, interval, rate, intervalCoef, resource = 'money') {
+    _displayJs.createAccumulatorInterface(name);
+    const updateOutput = ()=>{
+        _displayJs.draw('.' + name + '_output', calculateOutput(name));
+    };
+    _storeJs.initStoreValue(name, {
+        interval,
+        rate,
+        resource,
+        running: true
+    }, [
+        {
+            triggers: [
+                interval,
+                rate
+            ],
+            func: updateOutput
+        }
+    ]);
+    updateOutput();
+    const cb = ()=>{
+        var amount = _storeJs.getStoreValue(resource, 'value');
+        _storeJs.updateStoreValue(resource, 'value', amount + _storeJs.getStoreValue(name, 'rate'));
+    };
+    _tickJs.onlineTicks(cb, name);
+    return name;
+}
 function stopButton() {
     document.querySelector('.stopCounter').addEventListener('click', function() {
-        _storeJs.updateStoreValue('exit', true);
+        _storeJs.updateStoreValue('exit', 'value', true);
         document.querySelector('.startCounter').disabled = false;
         document.querySelector('.stopCounter').disabled = true;
     });
@@ -766,7 +829,7 @@ function upgradeButton() {
     return;
 }
 
-},{"/utils/display.js":"fiw1F","/utils/tick.js":"fqJbJ","/utils/store.js":"hkUX0","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"fqJbJ":[function(require,module,exports) {
+},{"/utils/display.js":"fiw1F","/utils/tick.js":"fqJbJ","/utils/store.js":"hkUX0","/utils/globals.js":"7uFJX","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"fqJbJ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 // #TODO: Implement offline tick calculator
@@ -776,25 +839,36 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "onlineTicks", ()=>onlineTicks
 );
 var _storeJs = require("/utils/store.js");
-var MINIMUM_INTERVAL = 300;
-function onlineTicks(cb) {
-    var interval = _storeJs.getStoreValue('interval'), exit = _storeJs.getStoreValue('exit');
-    if (interval < MINIMUM_INTERVAL) {
+var _globalsJs = require("/utils/globals.js");
+function onlineTicks(cb, name) {
+    var interval = _storeJs.getStoreValue(name, 'interval'), running = _storeJs.getStoreValue(name, 'running'), globalExit = _storeJs.getStoreValue('exit', 'value');
+    if (interval < _globalsJs.MINIMUM_INTERVAL) {
         console.warn('Attempted to use interval lower than minimum interval, setting interval to minimum');
-        interval = MINIMUM_INTERVAL;
+        interval = _globalsJs.MINIMUM_INTERVAL;
     }
-    if (exit === true) {
+    if (running !== true) {
         console.log('Ticks stopped');
+        return;
+    }
+    if (globalExit === true) {
+        console.log('All ticks stopped - global exit');
         return;
     }
     setTimeout(()=>{
         cb();
-        onlineTicks(cb);
+        onlineTicks(...arguments);
     }, interval);
     return;
 }
 
-},{"/utils/store.js":"hkUX0","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7Pj8I":[function(require,module,exports) {
+},{"/utils/store.js":"hkUX0","/utils/globals.js":"7uFJX","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7uFJX":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "MINIMUM_INTERVAL", ()=>MINIMUM_INTERVAL
+);
+const MINIMUM_INTERVAL = 300;
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7Pj8I":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "activateDevFunctions", ()=>activateDevFunctions
