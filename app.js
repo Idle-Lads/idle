@@ -1,25 +1,44 @@
-import { draw } from '/utils/display.js';
+import { drawFromStore } from '/utils/display.js';
 import { startButton, stopButton, upgradeButton } from '/game/events.js';
-
-// #TODO make the store automatically update all necessary "draws" when store is updated
-const store = {
-	money: 0,
-	interval: 1000,
-	exit: false,
-	upgradeCost: 1
-};
+import { initStoreValue } from '/utils/store.js';
 
 function bindEvents() {
-	startButton(store);
-	stopButton(store);
-	upgradeButton(store);
+	startButton();
+	stopButton();
+	upgradeButton();
+
+	return;
+}
+
+function initializeStore() {
+	initStoreValue('money', 0, [() => drawFromStore('.money', 'money')]);
+	initStoreValue('upgradeCost', 1, [() => drawFromStore('.upgradeCost', 'upgradeCost')]);
+
+	initStoreValue('interval', 1000);
+	initStoreValue('exit', false);
+
+	return;
+}
+
+function initializeDraw() {
+	drawFromStore('.money', 'money');
+	drawFromStore('.upgradeCost', 'upgradeCost');
+	
+	return;
 }
 
 function init() {
 	console.log('Application started');
+	
 	bindEvents();
-	draw('.money', store.money);
-	draw('.upgradeCost', store.upgradeCost);
+
+	initializeStore();
+	initializeDraw();
+
+	document.querySelector('.startCounter').disabled = false;
+	document.querySelector('.stopCounter').disabled = true;
+
+	return;
 }
 
 init();
