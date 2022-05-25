@@ -537,6 +537,7 @@ function bindEvents() {
     return;
 }
 function initializeStore() {
+    if (_storeJs.getStoreValue('loaded')) return;
     _storeJs.initStoreValue('money', 0, [
         ()=>_displayJs.drawFromStore('.money', 'money')
     ]);
@@ -560,6 +561,9 @@ function init() {
     document.querySelector('.startCounter').disabled = false;
     document.querySelector('.stopCounter').disabled = true;
     _devtoolsJs.activateDevFunctions();
+    _storeJs.updateWholeStoreSubs([
+        _storeJs.saveToLocalStorage
+    ]);
     return;
 }
 init();
@@ -601,14 +605,30 @@ parcelHelpers.export(exports, "getStoreString", ()=>getStoreString
 );
 parcelHelpers.export(exports, "updateWholeStoreSubs", ()=>updateWholeStoreSubs
 );
+parcelHelpers.export(exports, "saveToLocalStorage", ()=>saveToLocalStorage
+);
 const store = {
-    wholeStoreSubs: []
+    wholeStoreSubs: [],
+    loaded: {
+        value: false
+    }
 };
+function getStoreValues() {
+    const storeValues = {};
+    for(let key in store)if (store[key].value) storeValues[key] = store[key].value;
+    return storeValues;
+}
+function saveToLocalStorage() {
+    const storeValues = JSON.stringify(getStoreValues());
+    window.localStorage.setItem('idlestore', storeValues);
+}
 function initStoreValue(key, value, subs = []) {
     if (store[key]) {
         console.error('Store already has entry by key', key);
         return;
     }
+    const storeValues = JSON.parse(window.localStorage.getItem('idlestore'));
+    if (storeValues && storeValues[key]) value = storeValues[key];
     store[key] = {
         value: value,
         subs: [
@@ -786,6 +806,14 @@ function isInDev() {
     if (params.get('devmode') !== null) return true;
     return false;
 }
+function wipe() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('wipe') !== null) {
+        window.localStorage.removeItem('idlestore');
+        params.delete('wipe');
+        window.location.href = window.location.origin + window.location.pathname + '?' + params.toString();
+    }
+}
 function activateDevFunctions() {
     if (!isInDev()) return;
     const devTools = document.createElement('pre');
@@ -794,6 +822,7 @@ function activateDevFunctions() {
     _storeJs.updateWholeStoreSubs([
         ()=>_displayJs.draw('.devTools', _storeJs.getStoreString('\t'))
     ]);
+    wipe();
     window.getStoreString = _storeJs.getStoreString;
     return;
 }
