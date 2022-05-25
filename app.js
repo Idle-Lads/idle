@@ -11,7 +11,7 @@ function bindEvents() {
 }
 
 function initializeStore() {
-	initStoreValue('money', 0, [() => drawFromStore('.money', 'money')]);
+	initStoreValue('money', 0, [() => {drawFromStore('.money', 'money')}]);
 	initStoreValue('upgradeCost', 1, [() => drawFromStore('.upgradeCost', 'upgradeCost')]);
 
 	initStoreValue('interval', 1000);

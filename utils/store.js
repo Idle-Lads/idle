@@ -15,8 +15,6 @@ function initStoreValue(key, value, subs=[]) {
 }
 
 function getStoreValue(key) {
-	console.log(store, key, store[key]);
-
 	if (!store[key]) {
 		console.error('No entry in store by key', key);
 		return null;
@@ -51,7 +49,7 @@ function updateStoreValue(key, value) {
 	}
 
 	store[key].value = value;
-	executeSubs();
+	executeSubs(key);
 
 	return;
 }
