@@ -1,11 +1,36 @@
 const store = {
-	wholeStoreSubs: []
+	wholeStoreSubs: [],
+	loaded: { value: false }
 };
+
+function getStoreValues() {
+	const storeValues = {};
+
+	for (let key in store) {
+		if (store[key].value) {
+			storeValues[key] = store[key].value;
+		}
+	}
+
+	return storeValues;
+}
+
+function saveToLocalStorage() {
+	const storeValues = JSON.stringify(getStoreValues());
+
+	window.localStorage.setItem('idlestore', storeValues);
+}
 
 function initStoreValue(key, value, subs=[]) {
 	if (store[key]) {
 		console.error('Store already has entry by key', key);
 		return;
+	}
+
+	const storeValues = JSON.parse(window.localStorage.getItem('idlestore'));
+
+	if (storeValues && storeValues[key]) {
+		value = storeValues[key];
 	}
 
 	store[key] = {
@@ -103,5 +128,6 @@ export {
 	updateStoreValue,
 	updateStoreSubs,
 	getStoreString,
-	updateWholeStoreSubs
+	updateWholeStoreSubs,
+	saveToLocalStorage
 };

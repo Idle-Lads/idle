@@ -1,6 +1,6 @@
 import { drawFromStore } from '/utils/display.js';
 import { startButton, stopButton, upgradeButton } from '/game/events.js';
-import { initStoreValue } from '/utils/store.js';
+import { initStoreValue, updateWholeStoreSubs, saveToLocalStorage, getStoreValue } from '/utils/store.js';
 
 import { activateDevFunctions } from '/utils/devtools.js';
 
@@ -13,6 +13,10 @@ function bindEvents() {
 }
 
 function initializeStore() {
+	if (getStoreValue('loaded')) {
+		return;
+	}
+
 	initStoreValue('money', 0, [() => drawFromStore('.money', 'money')]);
 	initStoreValue('upgradeCost', 1, [() => drawFromStore('.upgradeCost', 'upgradeCost')]);
 
@@ -41,6 +45,8 @@ function init() {
 	document.querySelector('.stopCounter').disabled = true;
 
 	activateDevFunctions();
+
+	updateWholeStoreSubs([saveToLocalStorage]);
 
 	return;
 }

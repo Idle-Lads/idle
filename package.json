@@ -4,7 +4,7 @@
   "description": "Idle game",
   "scripts": {
     "predev": "test -f /opt/homebrew/opt/nvm/nvm.sh && source /opt/homebrew/opt/nvm/nvm.sh || echo 'not found' exit 0; nvm use --lts || exit 0",
-    "dev": "npx parcel index.html",
+    "dev": "npx parcel index.html --no-cache",
     "lint": "npx eslint .",
     "build": "parcel build index.html --public-url ./",
     "predeploy": "rm -rf dist && npm run build",
