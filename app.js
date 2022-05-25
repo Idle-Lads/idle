@@ -2,6 +2,8 @@ import { drawFromStore } from '/utils/display.js';
 import { startButton, stopButton, upgradeButton } from '/game/events.js';
 import { initStoreValue } from '/utils/store.js';
 
+import { activateDevFunctions } from '/utils/devtools.js';
+
 function bindEvents() {
 	startButton();
 	stopButton();
@@ -37,6 +39,8 @@ function init() {
 
 	document.querySelector('.startCounter').disabled = false;
 	document.querySelector('.stopCounter').disabled = true;
+
+	activateDevFunctions();
 
 	return;
 }
