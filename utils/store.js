@@ -1,4 +1,6 @@
-const store = {};
+const store = {
+	wholeStoreSubs: []
+};
 
 function initStoreValue(key, value, subs=[]) {
 	if (store[key]) {
@@ -50,6 +52,7 @@ function updateStoreValue(key, value) {
 
 	store[key].value = value;
 	executeSubs(key);
+	executeWholeStoreSubs();
 
 	return;
 }
@@ -65,9 +68,40 @@ function updateStoreSubs(key, subs) {
 	return;
 }
 
+function replacer(key, value) {
+	if (typeof value === 'function') {
+		return value.toString();
+	}
+	return value;
+}
+
+function getStoreString(seperator='') {
+	return JSON.stringify(store, replacer, seperator);
+}
+
+function updateWholeStoreSubs(subs) {
+	store.wholeStoreSubs.push(...subs);
+}
+
+function executeWholeStoreSubs() {
+	const subs = store.wholeStoreSubs;
+
+	if (subs.length == 0) {
+		return;
+	} 
+
+	for (let sub in subs) {
+		subs[sub]();
+	}
+
+	return;
+}
+
 export {
 	initStoreValue,
 	getStoreValue,
 	updateStoreValue,
-	updateStoreSubs
+	updateStoreSubs,
+	getStoreString,
+	updateWholeStoreSubs
 };
